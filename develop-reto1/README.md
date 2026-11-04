@@ -57,8 +57,9 @@ Esto procesa los 4 casos (`co-industrias-delta`, `ec-corp-andina`, `hn-agroexpor
 
 ## 🌐 Enlace Público de Prueba
 
-- **URL Pública Activa**: [https://514131a13d023f.lhr.life](https://514131a13d023f.lhr.life)
-- **Autenticación**: Acceso directo HTTPS sin contraseña.
+- **URL Pública Activa**: [https://develop-reto1.vercel.app](https://develop-reto1.vercel.app)
+- **Infraestructura**: Despliegue cloud 24/7 en Vercel Serverless con backend Express/TypeScript.
+- **Autenticación**: Acceso directo HTTPS sin contraseña ni restricciones de red.
 
 ---
 

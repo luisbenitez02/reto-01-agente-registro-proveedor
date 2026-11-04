@@ -5,7 +5,7 @@ El desarrollo completo del reto se encuentra organizado en el directorio [`devel
 
 ## Inicio Rápido
 
-- **Link Público Activo**: [https://514131a13d023f.lhr.life](https://514131a13d023f.lhr.life) (Acceso directo HTTPS)
+- **Link Público Activo**: [https://develop-reto1.vercel.app](https://develop-reto1.vercel.app) (Despliegue cloud 24/7 en Vercel)
 
 ```bash
 cd develop-reto1

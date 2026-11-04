@@ -91,11 +91,15 @@ app.get("/api/sessions/:id", (req, res) => {
   });
 });
 
-app.listen(port, () => {
-  console.log(`=======================================================`);
-  console.log(`🚀 Servidor Agente Registro Proveedor activo`);
-  console.log(`📡 URL local: http://localhost:${port}`);
-  console.log(`🔍 Health check: http://localhost:${port}/api/health`);
-  console.log(`=======================================================`);
-});
+if (!process.env.VERCEL) {
+  app.listen(port, () => {
+    console.log(`=======================================================`);
+    console.log(`🚀 Servidor Agente Registro Proveedor activo`);
+    console.log(`📡 URL local: http://localhost:${port}`);
+    console.log(`🔍 Health check: http://localhost:${port}/api/health`);
+    console.log(`=======================================================`);
+  });
+}
+
+export default app;
 
