@@ -9,10 +9,10 @@ Implementación del reto técnico según PRD.md para automatización de registro
 - S5: "Paso 5 — Exposición del link público y prueba final: Levantar túnel y validar con el prompt de prueba oficial (ec-corp-andina)."
 
 ## Tasks
-- [ ] T1 (S1): Setup de proyecto, dependencias y herramientas tipadas en `src/tools/proveedor.ts` con verificación determinista en `demo.ts` | route: direct-inline | commit: pending
-- [ ] T2 (S2): Adaptador Azure OpenAI, `agent/prompt.md`, `src/knowledge/registro-proveedor.md` y ciclo del agente con control de confirmación | route: direct-inline | commit: pending
-- [ ] T3 (S3): Servidor Express (`src/server.ts`) y frontend de chat (`web/`) con visualización de tool calls y confirmación humana | route: direct-inline | commit: pending
-- [ ] T4 (S4): Documentación completa (`SOLUCION.md`, `README.md`) y empaquetado del módulo reutilizable (`modulo/`) | route: direct-inline | commit: pending
+- [x] T1 (S1): Setup de proyecto, dependencias y herramientas tipadas en `src/tools/proveedor.ts` con verificación determinista en `demo.ts` | route: direct-inline | commit: bcab8ba
+- [x] T2 (S2): Adaptador Azure OpenAI, `agent/prompt.md`, `src/knowledge/registro-proveedor.md` y ciclo del agente con control de confirmación | route: direct-inline | commit: fc23f34
+- [x] T3 (S3): Servidor Express (`src/server.ts`) y frontend de chat (`web/`) con visualización de tool calls y confirmación humana | route: direct-inline | commit: 18ee1b8
+- [x] T4 (S4): Documentación completa (`SOLUCION.md`, `README.md`) y empaquetado del módulo reutilizable (`modulo/`) | route: direct-inline | commit: 47af738
 - [ ] T5 (S5): Configuración de exposición pública y validación e2e con el caso `ec-corp-andina` | route: direct-inline | commit: pending
 
 ## Log
