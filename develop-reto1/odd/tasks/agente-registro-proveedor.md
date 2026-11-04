@@ -13,7 +13,7 @@ Implementación del reto técnico según PRD.md para automatización de registro
 - [x] T2 (S2): Adaptador Azure OpenAI, `agent/prompt.md`, `src/knowledge/registro-proveedor.md` y ciclo del agente con control de confirmación | route: direct-inline | commit: fc23f34
 - [x] T3 (S3): Servidor Express (`src/server.ts`) y frontend de chat (`web/`) con visualización de tool calls y confirmación humana | route: direct-inline | commit: 18ee1b8
 - [x] T4 (S4): Documentación completa (`SOLUCION.md`, `README.md`) y empaquetado del módulo reutilizable (`modulo/`) | route: direct-inline | commit: 47af738
-- [ ] T5 (S5): Configuración de exposición pública y validación e2e con el caso `ec-corp-andina` | route: direct-inline | commit: pending
+- [x] T5 (S5): Configuración de exposición pública y validación e2e con el caso `ec-corp-andina` | route: direct-inline | commit: 6f1eae6
 
 ## Log
 - L1: "Necesito implementar este reto tecnico siguiendo las instrucciones del archivo PRD.md y cumpliendo todas las pruebas y fixtures. Te proveere los recursos de azure y API key necesarias para implementar. Vamos a ir paso a paso, lo primero que quiero es definir el step by step, los servicios que necesitamos (un enfoque simple, como una PoC) y. partir de alli ir implementando por partes. Tengo 2 horas para finalizar esta prueba"
