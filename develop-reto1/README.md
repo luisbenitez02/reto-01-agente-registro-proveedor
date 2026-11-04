@@ -57,12 +57,9 @@ Esto procesa los 4 casos (`co-industrias-delta`, `ec-corp-andina`, `hn-agroexpor
 
 ## 🌐 Enlace Público de Prueba
 
-Durante la sesión de prueba o defensa:
-- **URL Pública**: *Configurable vía túnel localtunnel / ngrok / Azure Web App*
-  ```bash
-  npx localtunnel --port 3000
-  ```
-- **Autenticación**: Acceso libre / público.
+- **URL Pública Activa**: [https://small-wombats-exist.loca.lt](https://small-wombats-exist.loca.lt)
+- **Contraseña de túnel (IP)**: `181.54.1.46` (solicitada por localtunnel la primera vez para verificar el navegador)
+- **Autenticación**: Acceso público sin contraseña adicional.
 
 ---
 
@@ -103,3 +100,4 @@ develop-reto1/
 - `POST /api/chat`: Cuerpo `{ sessionId, message }`. Responde `{ reply, toolCalls[], needsConfirmation }`.
 - `GET /api/sessions/:id`: Historial de conversación y estado de confirmación de la sesión.
 - `GET /api/health`: Estado del servicio y proveedor configurado sin revelar secretos.
+

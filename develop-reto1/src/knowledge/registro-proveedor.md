@@ -23,3 +23,4 @@ El repositorio interno almacena los soportes corporativos estándar:
 ## 4. Política de Seguridad y Datos Sensibles
 - La información de cuentas bancarias (número de cuenta, tipo, SWIFT) es confidencial y únicamente se inserta en las secciones estrictamente habilitadas para tal fin en los formularios. Bajo ninguna circunstancia debe exponerse en el cuerpo del correo de contacto.
 - La firma del formulario y el envío definitivo son actos bajo exclusiva potestad del Representante Legal y el analista administrativo a cargo.
+

@@ -33,3 +33,4 @@ export interface ChatMessage {
 export interface LLMAdapter {
   enviar(mensajes: ChatMessage[], herramientas: ToolDefinition[]): Promise<ChatMessage>;
 }
+

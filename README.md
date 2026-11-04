@@ -5,6 +5,8 @@ El desarrollo completo del reto se encuentra organizado en el directorio [`devel
 
 ## Inicio Rápido
 
+- **Link Público Activo**: [https://small-wombats-exist.loca.lt](https://small-wombats-exist.loca.lt) (Password/IP: `181.54.1.46`)
+
 ```bash
 cd develop-reto1
 npm install
@@ -15,3 +17,4 @@ npm run dev     # Servidor local en http://localhost:3000
 Para documentación detallada de arquitectura, decisiones y rúbrica, consulta:
 - [develop-reto1/SOLUCION.md](./develop-reto1/SOLUCION.md)
 - [develop-reto1/README.md](./develop-reto1/README.md)
+

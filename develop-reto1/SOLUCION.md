@@ -169,3 +169,4 @@ Para clientes que exigen registro vía portal web (como VendorHub en Panamá):
    - *Mitigación*: Regla estricta RN2 implementada en código (`armar_paquete` excluye programáticamente las claves bancarias de `borrador-correo.md`, sin depender de la voluntad del LLM).
 3. **Riesgo**: Envío no autorizado a clientes externos con documentos vencidos.
    - *Mitigación*: Doble candado: (a) `listo_para_firma` se bloquea en código ante cualquier soporte ausente o vencido; (b) `proveedor_simular_envio` exige confirmación humana explícita en el turno anterior.
+

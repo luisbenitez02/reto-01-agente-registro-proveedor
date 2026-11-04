@@ -116,3 +116,4 @@ runDemo().catch((err) => {
   console.error("Fallo crítico en demo.ts:", err);
   process.exit(1);
 });
+
