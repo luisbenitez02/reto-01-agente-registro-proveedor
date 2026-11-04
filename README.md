@@ -5,7 +5,7 @@ El desarrollo completo del reto se encuentra organizado en el directorio [`devel
 
 ## Inicio Rápido
 
-- **Link Público Activo**: [https://small-wombats-exist.loca.lt](https://small-wombats-exist.loca.lt) (Password/IP: `181.54.1.46`)
+- **Link Público Activo**: [https://514131a13d023f.lhr.life](https://514131a13d023f.lhr.life) (Acceso directo HTTPS)
 
 ```bash
 cd develop-reto1

@@ -57,9 +57,8 @@ Esto procesa los 4 casos (`co-industrias-delta`, `ec-corp-andina`, `hn-agroexpor
 
 ## 🌐 Enlace Público de Prueba
 
-- **URL Pública Activa**: [https://small-wombats-exist.loca.lt](https://small-wombats-exist.loca.lt)
-- **Contraseña de túnel (IP)**: `181.54.1.46` (solicitada por localtunnel la primera vez para verificar el navegador)
-- **Autenticación**: Acceso público sin contraseña adicional.
+- **URL Pública Activa**: [https://514131a13d023f.lhr.life](https://514131a13d023f.lhr.life)
+- **Autenticación**: Acceso directo HTTPS sin contraseña.
 
 ---
 
