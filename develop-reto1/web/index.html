@@ -327,14 +327,20 @@
       color: #000;
       font-weight: 600;
       border: none;
-      padding: 0.4rem 0.9rem;
+      padding: 0.45rem 1rem;
       border-radius: 6px;
       cursor: pointer;
-      font-size: 0.8rem;
+      font-size: 0.82rem;
+      transition: all 0.15s ease;
     }
 
-    .btn-confirm:hover {
+    .btn-confirm:hover:not(:disabled) {
       background-color: #d97706;
+    }
+
+    .btn-confirm:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
     }
 
     /* Thinking Spinner */
@@ -449,16 +455,16 @@
         <span class="status-dot"></span>
         <span id="backend-status-text">Verificando...</span>
       </div>
-      <button class="btn-secondary" id="new-session-btn">Nueva Sesión</button>
+      <button type="button" class="btn-secondary" id="new-session-btn">Nueva Sesión</button>
     </div>
   </header>
 
   <main>
     <div class="quick-prompts">
-      <button class="quick-btn" onclick="sendQuickPrompt('Procesa el caso ec-corp-andina. Dime qué campos quedaron llenos, cuáles faltan, si el paquete está listo para firma y qué soportes debo actualizar. No envíes nada todavía.')">⚡ Caso Ecuador (PDF)</button>
-      <button class="quick-btn" onclick="sendQuickPrompt('Procesa el caso co-industrias-delta. Verifica los campos requeridos y arma el paquete.')">⚡ Caso Colombia (Excel)</button>
-      <button class="quick-btn" onclick="sendQuickPrompt('Procesa el caso hn-agroexport-sula y dime el estado de los soportes.')">⚡ Caso Honduras (Excel)</button>
-      <button class="quick-btn" onclick="sendQuickPrompt('Procesa el caso pa-logistica-istmo para registro en portal.')">⚡ Caso Panamá (Portal)</button>
+      <button type="button" class="quick-btn" onclick="executePrompt('Procesa el caso ec-corp-andina. Dime qué campos quedaron llenos, cuáles faltan, si el paquete está listo para firma y qué soportes debo actualizar. No envíes nada todavía.')">⚡ Caso Ecuador (PDF)</button>
+      <button type="button" class="quick-btn" onclick="executePrompt('Procesa el caso co-industrias-delta. Verifica los campos requeridos y arma el paquete.')">⚡ Caso Colombia (Excel)</button>
+      <button type="button" class="quick-btn" onclick="executePrompt('Procesa el caso hn-agroexport-sula y dime el estado de los soportes.')">⚡ Caso Honduras (Excel)</button>
+      <button type="button" class="quick-btn" onclick="executePrompt('Procesa el caso pa-logistica-istmo para registro en portal.')">⚡ Caso Panamá (Portal)</button>
     </div>
 
     <div class="chat-box" id="chat-box">
@@ -489,7 +495,14 @@ Indícame qué caso deseas procesar (ej: <code>ec-corp-andina</code>, <code>co-i
   </main>
 
   <script>
-    let currentSessionId = 'session-' + Date.now();
+    // Session management with localStorage persistence
+    const STORAGE_KEY = 'periferia_chat_session_id';
+    let currentSessionId = localStorage.getItem(STORAGE_KEY);
+    if (!currentSessionId) {
+      currentSessionId = 'session-' + Date.now();
+      localStorage.setItem(STORAGE_KEY, currentSessionId);
+    }
+
     const chatBox = document.getElementById('chat-box');
     const chatForm = document.getElementById('chat-form');
     const userInput = document.getElementById('user-input');
@@ -507,12 +520,18 @@ Indícame qué caso deseas procesar (ej: <code>ec-corp-andina</code>, <code>co-i
     userInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
-        chatForm.dispatchEvent(new Event('submit'));
+        submitCurrentMessage();
       }
+    });
+
+    chatForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      submitCurrentMessage();
     });
 
     newSessionBtn.addEventListener('click', () => {
       currentSessionId = 'session-' + Date.now();
+      localStorage.setItem(STORAGE_KEY, currentSessionId);
       chatBox.innerHTML = `
         <div class="msg-wrapper assistant">
           <div class="msg-meta">Agente Periferia</div>
@@ -521,8 +540,8 @@ Indícame qué caso deseas procesar (ej: <code>ec-corp-andina</code>, <code>co-i
       `;
     });
 
-    // Check health
-    async function checkHealth() {
+    // Check health & restore session
+    async function checkHealthAndRestore() {
       try {
         const res = await fetch('/api/health');
         const data = await res.json();
@@ -534,12 +553,46 @@ Indícame qué caso deseas procesar (ej: <code>ec-corp-andina</code>, <code>co-i
       } catch {
         statusText.textContent = 'Desconectado';
       }
-    }
-    checkHealth();
 
-    function sendQuickPrompt(prompt) {
-      userInput.value = prompt;
-      chatForm.dispatchEvent(new Event('submit'));
+      // Restore session history from backend if available
+      try {
+        const sessRes = await fetch(`/api/sessions/${currentSessionId}`);
+        if (sessRes.ok) {
+          const sessData = await sessRes.json();
+          if (sessData.ok && Array.isArray(sessData.messages) && sessData.messages.length > 1) {
+            // Rebuild history
+            renderRestoredSession(sessData.messages);
+          }
+        }
+      } catch (err) {
+        console.warn('Could not restore session:', err);
+      }
+    }
+    checkHealthAndRestore();
+
+    function renderRestoredSession(messages) {
+      chatBox.innerHTML = '';
+      for (const m of messages) {
+        if (m.role === 'system' || m.role === 'tool') continue;
+        if (m.role === 'user') {
+          appendMessage('user', m.content);
+        } else if (m.role === 'assistant') {
+          const wrapper = appendMessage('assistant', m.content || '');
+          if (m.tool_calls && m.tool_calls.length > 0) {
+            const formattedCalls = m.tool_calls.map(tc => {
+              let parsedArgs = {};
+              try { parsedArgs = JSON.parse(tc.function.arguments); } catch {}
+              return { name: tc.function.name, args: parsedArgs, result: { ok: true } };
+            });
+            appendToolCalls(wrapper, formattedCalls);
+          }
+        }
+      }
+    }
+
+    function executePrompt(promptText) {
+      userInput.value = promptText;
+      submitCurrentMessage();
     }
 
     function appendMessage(role, content) {
@@ -567,7 +620,7 @@ Indícame qué caso deseas procesar (ej: <code>ec-corp-andina</code>, <code>co-i
       const container = document.createElement('div');
       container.className = 'tool-calls-container';
 
-      toolCalls.forEach((tc, idx) => {
+      toolCalls.forEach((tc) => {
         const card = document.createElement('div');
         card.className = 'tool-card';
 
@@ -618,21 +671,31 @@ Indícame qué caso deseas procesar (ej: <code>ec-corp-andina</code>, <code>co-i
         </div>
         <p style="font-size: 0.8rem; color: #cbd5e1;">El agente requiere tu autorización explícita antes de simular el envío o transferir datos.</p>
         <div class="conf-actions">
-          <button class="btn-confirm" onclick="sendQuickPrompt('Confirmo y autorizo el envío.')">✅ Sí, confirmar envío</button>
+          <button type="button" class="btn-confirm" id="btn-conf-action">✅ Sí, confirmar envío</button>
         </div>
       `;
+
+      const btn = banner.querySelector('#btn-conf-action');
+      btn.addEventListener('click', () => {
+        btn.disabled = true;
+        btn.textContent = 'Enviando confirmación...';
+        sendMessage('Sí, confirmo el envío.');
+      });
+
       wrapper.appendChild(banner);
       chatBox.scrollTop = chatBox.scrollHeight;
     }
 
-    chatForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
+    function submitCurrentMessage() {
       const message = userInput.value.trim();
       if (!message) return;
-
-      appendMessage('user', message);
       userInput.value = '';
       userInput.style.height = 'auto';
+      sendMessage(message);
+    }
+
+    async function sendMessage(message) {
+      appendMessage('user', message);
 
       sendBtn.disabled = true;
       thinkingIndicator.style.display = 'flex';
@@ -669,8 +732,7 @@ Indícame qué caso deseas procesar (ej: <code>ec-corp-andina</code>, <code>co-i
         sendBtn.disabled = false;
         appendMessage('assistant', `⚠️ Error de red o conexión: ${err.message}`);
       }
-    });
+    }
   </script>
 </body>
 </html>
-
