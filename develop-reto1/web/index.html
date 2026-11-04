@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Periferia IT Group — Agente Registro como Proveedor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --surface-light: #334155;
+      --border: #334155;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --primary-light: rgba(37, 99, 235, 0.15);
+      --accent-green: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-red: #ef4444;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font);
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Header */
+    header {
+      background-color: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0.85rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .brand-logo {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, #2563eb, #60a5fa);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: white;
+      font-size: 1.1rem;
+    }
+
+    .brand-info h1 {
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+
+    .brand-info p {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .status-badge {
+      font-size: 0.75rem;
+      padding: 0.25rem 0.6rem;
+      border-radius: 9999px;
+      background-color: rgba(16, 185, 129, 0.15);
+      color: var(--accent-green);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background-color: currentColor;
+    }
+
+    button.btn-secondary {
+      background: var(--surface-light);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.4rem 0.8rem;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s ease;
+    }
+
+    button.btn-secondary:hover {
+      background: #475569;
+    }
+
+    /* Main Container */
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      max-width: 960px;
+      width: 100%;
+      margin: 0 auto;
+      height: calc(100vh - 65px);
+      position: relative;
+    }
+
+    /* Quick Prompts Bar */
+    .quick-prompts {
+      padding: 0.75rem 1rem 0;
+      display: flex;
+      gap: 0.5rem;
+      overflow-x: auto;
+      flex-shrink: 0;
+    }
+
+    .quick-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 0.35rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+    }
+
+    .quick-btn:hover {
+      background: var(--surface-light);
+      color: var(--text);
+      border-color: #64748b;
+    }
+
+    /* Chat Messages Box */
+    .chat-box {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .msg-wrapper {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+    }
+
+    .msg-wrapper.user {
+      align-items: flex-end;
+    }
+
+    .msg-wrapper.assistant {
+      align-items: flex-start;
+    }
+
+    .msg-meta {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-bottom: 0.25rem;
+      padding: 0 0.25rem;
+    }
+
+    .msg-bubble {
+      max-width: 85%;
+      padding: 0.85rem 1.1rem;
+      border-radius: 12px;
+      font-size: 0.9rem;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .user .msg-bubble {
+      background-color: var(--primary);
+      color: white;
+      border-bottom-right-radius: 2px;
+    }
+
+    .assistant .msg-bubble {
+      background-color: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-bottom-left-radius: 2px;
+    }
+
+    /* Tool Call Card */
+    .tool-calls-container {
+      margin-top: 0.6rem;
+      width: 100%;
+      max-width: 85%;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .tool-card {
+      background-color: #131c2e;
+      border: 1px solid #1e3a5f;
+      border-radius: 8px;
+      overflow: hidden;
+      font-size: 0.78rem;
+    }
+
+    .tool-header {
+      background-color: #17253d;
+      padding: 0.45rem 0.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .tool-name-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-family: var(--font-mono);
+      color: #60a5fa;
+      font-weight: 500;
+    }
+
+    .tool-status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background-color: var(--accent-green);
+    }
+
+    .tool-toggle-icon {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      transition: transform 0.2s ease;
+    }
+
+    .tool-body {
+      padding: 0.65rem 0.75rem;
+      display: none;
+      border-top: 1px solid #1e3a5f;
+      background-color: #0d1524;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+    }
+
+    .tool-body.open {
+      display: block;
+    }
+
+    .tool-body-section {
+      margin-bottom: 0.4rem;
+    }
+
+    .tool-section-title {
+      color: var(--text-muted);
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.2rem;
+    }
+
+    pre.tool-json {
+      background-color: #090e1a;
+      padding: 0.4rem;
+      border-radius: 4px;
+      overflow-x: auto;
+      color: #cbd5e1;
+    }
+
+    /* Human Confirmation Banner */
+    .confirmation-banner {
+      background: linear-gradient(90deg, rgba(245, 158, 11, 0.15), rgba(245, 158, 11, 0.05));
+      border: 1px solid var(--accent-amber);
+      border-radius: 10px;
+      padding: 0.85rem 1.1rem;
+      margin-top: 0.6rem;
+      max-width: 85%;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .conf-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--accent-amber);
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+
+    .conf-actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.25rem;
+    }
+
+    .btn-confirm {
+      background-color: var(--accent-amber);
+      color: #000;
+      font-weight: 600;
+      border: none;
+      padding: 0.4rem 0.9rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.8rem;
+    }
+
+    .btn-confirm:hover {
+      background-color: #d97706;
+    }
+
+    /* Thinking Spinner */
+    .thinking-indicator {
+      display: none;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.6rem 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      width: fit-content;
+      margin-bottom: 0.5rem;
+    }
+
+    .dots-flashing {
+      display: flex;
+      gap: 4px;
+    }
+
+    .dot {
+      width: 6px;
+      height: 6px;
+      background-color: var(--primary);
+      border-radius: 50%;
+      animation: pulse 1s infinite alternate;
+    }
+
+    .dot:nth-child(2) { animation-delay: 0.2s; }
+    .dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes pulse {
+      0% { opacity: 0.2; transform: scale(0.8); }
+      100% { opacity: 1; transform: scale(1.1); }
+    }
+
+    /* Input Footer */
+    footer {
+      padding: 0.85rem 1rem;
+      background-color: var(--surface);
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .input-form {
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-end;
+    }
+
+    textarea#user-input {
+      flex: 1;
+      background-color: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.9rem;
+      resize: none;
+      max-height: 120px;
+      min-height: 48px;
+      line-height: 1.4;
+      outline: none;
+      transition: border-color 0.15s ease;
+    }
+
+    textarea#user-input:focus {
+      border-color: var(--primary);
+    }
+
+    button#send-btn {
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      height: 48px;
+      padding: 0 1.3rem;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: background-color 0.15s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    button#send-btn:hover:not(:disabled) {
+      background-color: var(--primary-hover);
+    }
+
+    button#send-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="header-brand">
+      <div class="brand-logo">P</div>
+      <div class="brand-info">
+        <h1>Periferia IT Group · Registro como Proveedor</h1>
+        <p>Agente Conversacional Autónomo con Verificación de Herramientas</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <div class="status-badge" id="backend-status">
+        <span class="status-dot"></span>
+        <span id="backend-status-text">Verificando...</span>
+      </div>
+      <button class="btn-secondary" id="new-session-btn">Nueva Sesión</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="quick-prompts">
+      <button class="quick-btn" onclick="sendQuickPrompt('Procesa el caso ec-corp-andina. Dime qué campos quedaron llenos, cuáles faltan, si el paquete está listo para firma y qué soportes debo actualizar. No envíes nada todavía.')">⚡ Caso Ecuador (PDF)</button>
+      <button class="quick-btn" onclick="sendQuickPrompt('Procesa el caso co-industrias-delta. Verifica los campos requeridos y arma el paquete.')">⚡ Caso Colombia (Excel)</button>
+      <button class="quick-btn" onclick="sendQuickPrompt('Procesa el caso hn-agroexport-sula y dime el estado de los soportes.')">⚡ Caso Honduras (Excel)</button>
+      <button class="quick-btn" onclick="sendQuickPrompt('Procesa el caso pa-logistica-istmo para registro en portal.')">⚡ Caso Panamá (Portal)</button>
+    </div>
+
+    <div class="chat-box" id="chat-box">
+      <!-- Welcome message -->
+      <div class="msg-wrapper assistant">
+        <div class="msg-meta">Agente Periferia</div>
+        <div class="msg-bubble">¡Hola! Soy el Agente de Registro de Proveedores de Periferia IT Group. Puedo automatizar la lectura de solicitudes de clientes, el mapeo de campos contra nuestro repositorio maestro, la generación de formularios (.xlsx, .pdf o formato portal) y el armado del paquete para firma con checklist de vigencias.
+
+Indícame qué caso deseas procesar (ej: <code>ec-corp-andina</code>, <code>co-industrias-delta</code>, <code>hn-agroexport-sula</code> o <code>pa-logistica-istmo</code>).</div>
+      </div>
+    </div>
+
+    <div class="thinking-indicator" id="thinking-indicator">
+      <div class="dots-flashing">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+      <span>El agente está evaluando herramientas...</span>
+    </div>
+
+    <footer>
+      <form class="input-form" id="chat-form">
+        <textarea id="user-input" rows="1" placeholder="Escribe un mensaje o instrucción... (Enter para enviar, Shift+Enter para salto de línea)"></textarea>
+        <button type="submit" id="send-btn">Enviar</button>
+      </form>
+    </footer>
+  </main>
+
+  <script>
+    let currentSessionId = 'session-' + Date.now();
+    const chatBox = document.getElementById('chat-box');
+    const chatForm = document.getElementById('chat-form');
+    const userInput = document.getElementById('user-input');
+    const sendBtn = document.getElementById('send-btn');
+    const thinkingIndicator = document.getElementById('thinking-indicator');
+    const statusText = document.getElementById('backend-status-text');
+    const newSessionBtn = document.getElementById('new-session-btn');
+
+    // Auto-resize textarea
+    userInput.addEventListener('input', () => {
+      userInput.style.height = 'auto';
+      userInput.style.height = Math.min(userInput.scrollHeight, 120) + 'px';
+    });
+
+    userInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        chatForm.dispatchEvent(new Event('submit'));
+      }
+    });
+
+    newSessionBtn.addEventListener('click', () => {
+      currentSessionId = 'session-' + Date.now();
+      chatBox.innerHTML = `
+        <div class="msg-wrapper assistant">
+          <div class="msg-meta">Agente Periferia</div>
+          <div class="msg-bubble">Nueva sesión iniciada. ¿Qué caso de cliente deseas evaluar?</div>
+        </div>
+      `;
+    });
+
+    // Check health
+    async function checkHealth() {
+      try {
+        const res = await fetch('/api/health');
+        const data = await res.json();
+        if (data.ok) {
+          statusText.textContent = `${data.provider} (${data.model})`;
+        } else {
+          statusText.textContent = 'API sin configurar';
+        }
+      } catch {
+        statusText.textContent = 'Desconectado';
+      }
+    }
+    checkHealth();
+
+    function sendQuickPrompt(prompt) {
+      userInput.value = prompt;
+      chatForm.dispatchEvent(new Event('submit'));
+    }
+
+    function appendMessage(role, content) {
+      const wrapper = document.createElement('div');
+      wrapper.className = `msg-wrapper ${role}`;
+
+      const meta = document.createElement('div');
+      meta.className = 'msg-meta';
+      meta.textContent = role === 'user' ? 'Tú' : 'Agente Periferia';
+
+      const bubble = document.createElement('div');
+      bubble.className = 'msg-bubble';
+      bubble.textContent = content;
+
+      wrapper.appendChild(meta);
+      wrapper.appendChild(bubble);
+      chatBox.appendChild(wrapper);
+      chatBox.scrollTop = chatBox.scrollHeight;
+      return wrapper;
+    }
+
+    function appendToolCalls(wrapper, toolCalls) {
+      if (!toolCalls || toolCalls.length === 0) return;
+
+      const container = document.createElement('div');
+      container.className = 'tool-calls-container';
+
+      toolCalls.forEach((tc, idx) => {
+        const card = document.createElement('div');
+        card.className = 'tool-card';
+
+        const header = document.createElement('div');
+        header.className = 'tool-header';
+        header.innerHTML = `
+          <div class="tool-name-badge">
+            <span class="tool-status-dot"></span>
+            <span>🔧 ${tc.name}</span>
+          </div>
+          <span class="tool-toggle-icon">▼</span>
+        `;
+
+        const body = document.createElement('div');
+        body.className = 'tool-body';
+        body.innerHTML = `
+          <div class="tool-body-section">
+            <div class="tool-section-title">Argumentos</div>
+            <pre class="tool-json">${JSON.stringify(tc.args, null, 2)}</pre>
+          </div>
+          <div class="tool-body-section">
+            <div class="tool-section-title">Resultado</div>
+            <pre class="tool-json">${JSON.stringify(tc.result, null, 2)}</pre>
+          </div>
+        `;
+
+        header.addEventListener('click', () => {
+          body.classList.toggle('open');
+          const icon = header.querySelector('.tool-toggle-icon');
+          icon.textContent = body.classList.contains('open') ? '▲' : '▼';
+        });
+
+        card.appendChild(header);
+        card.appendChild(body);
+        container.appendChild(card);
+      });
+
+      wrapper.appendChild(container);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function appendConfirmationBanner(wrapper) {
+      const banner = document.createElement('div');
+      banner.className = 'confirmation-banner';
+      banner.innerHTML = `
+        <div class="conf-header">
+          <span>⚠️ ACCIÓN EXTERNA: Confirmación Requerida</span>
+        </div>
+        <p style="font-size: 0.8rem; color: #cbd5e1;">El agente requiere tu autorización explícita antes de simular el envío o transferir datos.</p>
+        <div class="conf-actions">
+          <button class="btn-confirm" onclick="sendQuickPrompt('Confirmo y autorizo el envío.')">✅ Sí, confirmar envío</button>
+        </div>
+      `;
+      wrapper.appendChild(banner);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    chatForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const message = userInput.value.trim();
+      if (!message) return;
+
+      appendMessage('user', message);
+      userInput.value = '';
+      userInput.style.height = 'auto';
+
+      sendBtn.disabled = true;
+      thinkingIndicator.style.display = 'flex';
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      try {
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sessionId: currentSessionId,
+            message: message,
+          }),
+        });
+
+        const data = await response.json();
+        thinkingIndicator.style.display = 'none';
+        sendBtn.disabled = false;
+
+        if (data.ok === false) {
+          appendMessage('assistant', `⚠️ Error: ${data.error}`);
+          return;
+        }
+
+        const assistantWrapper = appendMessage('assistant', data.reply);
+        if (data.toolCalls && data.toolCalls.length > 0) {
+          appendToolCalls(assistantWrapper, data.toolCalls);
+        }
+        if (data.needsConfirmation) {
+          appendConfirmationBanner(assistantWrapper);
+        }
+      } catch (err) {
+        thinkingIndicator.style.display = 'none';
+        sendBtn.disabled = false;
+        appendMessage('assistant', `⚠️ Error de red o conexión: ${err.message}`);
+      }
+    });
+  </script>
+</body>
+</html>
