@@ -288,6 +288,10 @@ export const generar_formulario = {
         mappingData = mappingRes.data;
       }
 
+      if (!mappingData) {
+        return JSON.stringify({ ok: false, error: "No se pudo obtener datos de mapeo." });
+      }
+
       // Map from etiqueta -> string value (combining llenos and confirmed tax id)
       const valueMap = new Map<string, string>();
       for (const item of (mappingData.llenos || [])) {
