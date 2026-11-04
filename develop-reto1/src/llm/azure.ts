@@ -17,10 +17,10 @@ export class AzureLLMAdapter implements LLMAdapter {
       }
       this.endpoint = rawEndpoint;
     } else {
-      this.endpoint = "https://luisbenitez-14-7595-resource.services.ai.azure.com/openai/v1/responses";
+      this.endpoint = "";
     }
 
-    if (this.apiKey && !this.apiKey.includes("your-api-key")) {
+    if (this.endpoint && this.apiKey && !this.apiKey.includes("your-api-key")) {
       this.isConfigured = true;
     }
   }
