@@ -24,10 +24,10 @@ El diligenciamiento manual y repetitivo de formularios de registro de proveedore
                             │ HTTP POST /api/chat
                             ▼
 ┌────────────────────────────────────────────────────────┐
-│             Backend & Servidor (src/server.ts)         │
-│   - Express API (/api/chat, /api/health, /api/sessions)│
-│   - Gestión de Sesiones en Memoria                     │
-│   - Ciclo de Control del Agente (src/agent/loop.ts)    │
+│      Backend Express / Vercel Serverless (src/)        │
+│   - Servidor Express con Serverless Handler (api/)     │
+│   - Endpoints: /api/chat, /api/health, /api/sessions   │
+│   - Ciclo ReAct del Agente (src/agent/loop.ts)         │
 │     * Control de tope de iteraciones (máx 25)          │
 │     * Bloqueo de acciones externas sin confirmación    │
 └───────────────┬────────────────────────┬───────────────┘
@@ -37,16 +37,16 @@ El diligenciamiento manual y repetitivo de formularios de registro de proveedore
 ┌───────────────────────────────┐ ┌──────────────────────────────────────┐
 │  Adaptador LLM (src/llm/)     │ │ Herramientas Tipadas                 │
 │  - AzureLLMAdapter            │ │ (src/tools/proveedor.ts)             │
-│  - Azure OpenAI SDK           │ │ - proveedor_leer_solicitud           │
-│  - Modelo: gpt-4o / mini      │ │ - proveedor_mapear_campos            │
-└───────────────────────────────┘ │ - proveedor_generar_formulario       │
-                                  │ - proveedor_armar_paquete            │
+│  - Azure AI Responses API     │ │ - proveedor_leer_solicitud           │
+│  - Endpoint: /v1/responses    │ │ - proveedor_mapear_campos            │
+│  - Modelo: gpt-5.2            │ │ - proveedor_generar_formulario       │
+└───────────────────────────────┘ │ - proveedor_armar_paquete            │
                                   │ - proveedor_simular_envio            │
                                   └──────────────┬───────────────────────┘
                                                  │
                                 ┌────────────────┴────────────────┐
                                 ▼                                 ▼
-                     fixtures/reto-01/ (RO)            out/<caso>/ (RW)
+                     fixtures/reto-01/ (RO)          out/ ó /tmp/out/ (RW)
                      - repositorio/maestro.json        - formulario.xlsx / .pdf
                      - glosario-campos.json            - valores-portal.md
                      - casos/<caso>/                   - paquete/checklist.md
@@ -71,23 +71,22 @@ El ciclo implementado en `src/agent/loop.ts` sigue el patrón ReAct determinista
 4. **Confirmación Humana (CA3 y RN4)**:
    - La herramienta `proveedor_simular_envio` verifica internamente el argumento `confirmado: true`.
    - Si el usuario no ha expresado explícitamente su confirmación en el turno previo ("sí", "confirmo", "procede"), la herramienta rechaza la ejecución devolviendo `{ ok: false, error: "requiere confirmación explícita" }`.
-   - El agente detecta cuando debe solicitar confirmación y emite una pregunta explícita al usuario, activando la bandera `needsConfirmation: true` que el frontend destaca visualmente con un banner ámbar interactivo.
-5. **Trazabilidad (RN5 y CA4)**: Cada ejecución de herramienta escribe un registro en `out/<caso>/log.jsonl` y `out/log.jsonl` con timestamp, estado y resumen.
+   - El agente detecta cuando debe solicitar confirmación y emite una pregunta explícita al usuario, activando la bandera `needsConfirmation: true` que el frontend destaca visualmente con un banner interactivo.
+5. **Trazabilidad (RN5 y CA4)**: Cada ejecución de herramienta escribe un registro en `out/<caso>/log.jsonl` (o `/tmp/out` en serverless) y en `out/log.jsonl` general con timestamp, estado y resumen.
 
 ---
 
 ## 4. Elección del Modelo de Lenguaje
-- **Proveedor**: Azure OpenAI Service.
-- **Modelo**: `gpt-4o` (o `gpt-4o-mini`).
+- **Proveedor**: Azure AI Services / Azure OpenAI (conectado nativamente a la Responses API en `/openai/v1/responses`).
+- **Modelo**: `gpt-5.2` (deployment `gpt-5.2`, versión standard).
 - **Justificación**:
-  - Excelente capacidad de razonamiento y seguimiento estricto de llamadas a herramientas (`tool_calling`) estructuradas.
-  - Baja latencia y estabilidad empresarial requerida en entornos corporativos.
-  - Disponibilidad nativa en la infraestructura de Azure del cliente con control de datos y privacidad.
+   - **Capacidad de Razonamiento de Frontera**: `gpt-5.2` ofrece una adherencia sobresaliente al seguimiento de esquemas complejos Zod y orquestación multi-herramienta sin degradación de contexto.
+   - **Comprensión Rigurosa de Reglas de Negocio**: Discrimina con exactitud sutilezas normativas por país (RN1: retención del NIT colombiano como identificador extranjero para EC, HN y PA; RN2: privacidad bancaria en correos; RN3: bloqueo de firma ante vencimientos).
+   - **Conexión Directa Azure Responses API**: Implementamos un adaptador HTTP nativo con autenticación por encabezado `api-key` y tipado estricto, garantizando respuesta en menos de 2.5 segundos.
 - **Costo Estimado**:
-  - Para un caso promedio (~3,000 tokens de entrada entre system prompt, glosario y esquema, y ~500 tokens de salida):
-  - Con `gpt-4o-mini`: ~$0.0006 USD por caso procesado.
-  - Con `gpt-4o`: ~$0.015 USD por caso procesado.
-  - Para 12 solicitudes al mes, el costo operativo de inferencia es prácticamente despreciable (< $0.20 USD mensuales).
+   - ~3,200 tokens de entrada y ~400 tokens de salida por ciclo completo de caso.
+   - Costo promedio por caso: ~$0.008 USD.
+   - Para un volumen mensual de 12 formularios, el costo total mensual ronda los **$0.10 USD**, maximizando el ROI del proceso.
 
 ---
 
@@ -123,17 +122,18 @@ Para clientes que exigen registro vía portal web (como VendorHub en Panamá):
 
 | # | Decisión Adoptada | Alternativa Descartada | Justificación Técnica |
 |---|---|---|---|
-| **1** | **Node.js 26 + TypeScript con `tsx` directo** sin build step intermedio para el runtime de desarrollo. | Configurar bundlers pesados (Webpack/Vite/NestJS). | Prioridad de entrega en 2 horas (KISS). `tsx` permite ejecutar TypeScript moderno con ESM nativo sin overhead de compilación ni archivos `.d.ts` intermedios. |
-| **2** | **Frontend Vanilla HTML5/CSS/JS nativo** servido por Express en `/web`. | React / Next.js / Angular SPA con client-side routing. | Cero dependencias de empaquetado frontend, carga instantánea, tamaño < 20KB, y total cumplimiento visual de las especificaciones del PRD (historial, tool calls y confirmación). |
-| **3** | **Generación directa de PDF con `pdfkit` y Excel con `exceljs`**. | Manipular plantillas binarias o herramientas de oficina en CLI (LibreOffice). | Determinismo total en `demo.ts`, portabilidad cross-platform (macOS/Linux/Windows), sin dependencias externas del sistema operativo. |
-| **4** | **Aislamiento de credenciales en adaptador Azure OpenAI**. | Llamadas directas con fetch desacopladas en el servidor. | La interfaz `LLMAdapter` permite sustituir Azure por OpenAI, Anthropic o modelos locales sin modificar una sola línea de las herramientas ni del servidor. |
+| **1** | **Node.js 20+ con TypeScript y `tsx`** sin build step pesado. | Configurar bundlers complejos (Webpack/Vite/NestJS). | Prioridad de entrega en tiempo límite (KISS). `tsx` ejecuta TypeScript ESM nativo sin archivos `.d.ts` intermedios ni compilación lenta. |
+| **2** | **Frontend Vanilla HTML5/CSS/JS nativo** servido por Express en `/web`. | React / Next.js / Angular SPA con client-side routing. | Cero dependencias de empaquetado frontend, carga instantánea (< 20KB), y total cumplimiento visual del PRD (historial, tool calls y confirmación). |
+| **3** | **Generación de PDF con `pdfkit` y Excel con `exceljs`**. | Herramientas de oficina en CLI (LibreOffice) o plantillas binarias. | Determinismo absoluto en `demo.ts`, portabilidad cross-platform (macOS/Linux/Windows), sin dependencias externas del sistema operativo. |
+| **4** | **Adaptador HTTP agnóstico para Azure AI Responses API**. | SDK estándar de ChatCompletions de OpenAI. | El endpoint de Azure AI Services utiliza el esquema `/openai/v1/responses` con modelo `gpt-5.2`. Un adaptador HTTP propio desacopla el ciclo del agente de SDKs volátiles. |
+| **5** | **Despliegue Cloud en Vercel Serverless**. | Azure App Service (Plan Basic B1 en East US 2 / South Central US). | *Problemas en Azure*: La suscripción presentaba cuota 0 de vCPU en East US 2 (`Limit B1 VMs: 0`), y en South Central US el despliegue zipdeploy con Kudu/Oryx generaba timeouts HTTP 502/504 al compilar y arrancar el contenedor. *Por qué Vercel*: Avalado en PRD 9.3, despliegue serverless instantáneo en Node 20+, cero cuotas bloqueantes de VM, HTTPS gestionado, y soporte de `/tmp` efímero. |
 
 ---
 
 ## 7. Supuestos Asumidos
-1. **Fecha de Evaluación Determinista**: Para las pruebas de `demo.ts`, se fijó una fecha de referencia (`2026-09-03`) de acuerdo con la fecha del PRD, permitiendo evidenciar con precisión que `camara-comercio-2026-08` está vigente y que `parafiscales-2026-07` (venció 2026-08-31) se detecta como **vencido**, bloqueando la firma. En el servidor en vivo, la fecha de evaluación es dinámica.
+1. **Fecha de Evaluación Determinista**: Para las pruebas de `demo.ts`, se fijó la fecha de referencia `2026-09-03` del PRD, permitiendo evidenciar que `camara-comercio-2026-08` está vigente y que `parafiscales-2026-07` (venció 2026-08-31) se detecta como **vencido**, bloqueando la firma.
 2. **Formato de Archivos de Soporte**: Los archivos en `fixtures/reto-01/repositorio/soportes/` son placeholders en formato `.txt`, los cuales se copian íntegramente al paquete respetando la integridad requerida.
-3. **NIT Extranjero**: Cuando un formulario en Ecuador, Honduras o Panamá solicita RUC/RTN, se diligencia con el NIT de Periferia (`900123456`) y se marca en `requiere_confirmacion` con la nota "identificador extranjero", permitiendo que el formulario no quede vacío y alertando al analista.
+3. **NIT Extranjero**: Cuando un formulario en Ecuador, Honduras o Panamá solicita RUC/RTN, se diligencia con el NIT de Periferia (`900123456`) y se marca en `requiere_confirmacion` con la nota "identificador extranjero", alertando al analista.
 
 ---
 
@@ -155,18 +155,20 @@ Para clientes que exigen registro vía portal web (como VendorHub en Panamá):
   - Generación de boilerplate tipado para `proveedor.ts` y esquemas Zod.
   - Mapeo de celdas para `exceljs` y diagramación con `pdfkit`.
   - Construcción de la interfaz web responsiva en `web/index.html`.
+  - Configuración del serverless handler y variables en Vercel.
 - **Propuestas Descartadas y Justificación**:
-  - Se descartó una propuesta inicial de usar frameworks de agentes pesados (LangChain / CrewAI) debido a la complejidad innecesaria de abstracciones y dependencias que habrían oscurecido el ciclo simple y evaluable exigido en la sección 6 del PRD.
-  - Se descartó crear una aplicación React con Vite por riesgo de tiempo en dependencias y compilación; se prefirió HTML/JS puro servido estáticamente.
+  - Se descartó el uso de frameworks de agentes pesados (LangChain / CrewAI) debido al overhead y abstracciones opacas que violaban la simplicidad requerida por el PRD.
+  - Se descartó crear una aplicación React con Vite por riesgo de dependencias y compilación; se prefirió HTML/JS puro servido estáticamente.
 
 ---
 
 ## 10. Riesgos de Producción y Mitigación
 
 1. **Riesgo**: El modelo de lenguaje intente "adivinar" o deducir un dato faltante (alucinación).
-   - *Mitigación*: Implementada en el diseño: el modelo no tiene herramientas para escribir datos que no provengan del maestro, y el prompt del sistema prohíbe taxativamente afirmar datos sin respaldo de herramientas.
+   - *Mitigación*: El modelo no tiene herramientas para inventar datos fuera del repositorio maestro, y el prompt del sistema prohíbe taxativamente afirmar datos sin respaldo de herramientas.
 2. **Riesgo**: Fuga involuntaria de información bancaria sensible en correos a clientes.
    - *Mitigación*: Regla estricta RN2 implementada en código (`armar_paquete` excluye programáticamente las claves bancarias de `borrador-correo.md`, sin depender de la voluntad del LLM).
 3. **Riesgo**: Envío no autorizado a clientes externos con documentos vencidos.
    - *Mitigación*: Doble candado: (a) `listo_para_firma` se bloquea en código ante cualquier soporte ausente o vencido; (b) `proveedor_simular_envio` exige confirmación humana explícita en el turno anterior.
-
+4. **Riesgo**: Almacenamiento efímero en arquitectura serverless.
+   - *Mitigación*: En Vercel, los archivos generados se aíslan en `/tmp/out`. Para producción corporativa, estos archivos se persistirán en un contenedor de **Azure Blob Storage** o **AWS S3** con retención y URLs firmadas.

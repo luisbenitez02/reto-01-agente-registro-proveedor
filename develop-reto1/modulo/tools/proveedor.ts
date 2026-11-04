@@ -32,6 +32,11 @@ function ensureDir(dirPath: string): void {
   }
 }
 
+function getOutDir(ctx: ToolContext, ...subpaths: string[]): string {
+  const base = process.env.VERCEL ? "/tmp/out" : path.resolve(ctx.directory, "out");
+  return subpaths.length > 0 ? path.join(base, ...subpaths) : base;
+}
+
 function logToolExecution(
   ctx: ToolContext,
   caso: string,
@@ -44,12 +49,12 @@ function logToolExecution(
     const logEntry = JSON.stringify({ ts, herramienta, ok, resumen }) + "\n";
     
     // Case specific log
-    const caseLogDir = path.resolve(ctx.directory, "out", caso);
+    const caseLogDir = getOutDir(ctx, caso);
     ensureDir(caseLogDir);
     fs.appendFileSync(path.join(caseLogDir, "log.jsonl"), logEntry, "utf-8");
 
     // General log
-    const generalLogDir = path.resolve(ctx.directory, "out");
+    const generalLogDir = getOutDir(ctx);
     ensureDir(generalLogDir);
     fs.appendFileSync(path.join(generalLogDir, "log.jsonl"), logEntry, "utf-8");
   } catch (err) {
@@ -301,7 +306,7 @@ export const generar_formulario = {
         valueMap.set(item.etiqueta.trim(), String(item.valor));
       }
 
-      const outCaseDir = path.resolve(ctx.directory, "out", args.caso);
+      const outCaseDir = getOutDir(ctx, args.caso);
       ensureDir(outCaseDir);
 
       if (solicitud.formato === "xlsx") {
@@ -467,11 +472,11 @@ export const armar_paquete = {
       const soportesExigidos = safeReadJson<string[]>(path.join(caseDir, "soportes-exigidos.json")) || [];
 
       // Ensure package folder
-      const paqueteDir = path.resolve(ctx.directory, "out", args.caso, "paquete");
+      const paqueteDir = getOutDir(ctx, args.caso, "paquete");
       ensureDir(paqueteDir);
 
       // Copy generated form into package if exists
-      const outCaseDir = path.resolve(ctx.directory, "out", args.caso);
+      const outCaseDir = getOutDir(ctx, args.caso);
       const possibleForms = ["formulario.xlsx", "formulario.pdf", "valores-portal.md"];
       for (const formFile of possibleForms) {
         const src = path.join(outCaseDir, formFile);
@@ -619,7 +624,7 @@ export const simular_envio = {
       const caseDir = getCaseDir(ctx, args.caso);
       const solicitud = safeReadJson<{ cliente: string; de: string; asunto: string }>(path.join(caseDir, "solicitud.json"));
 
-      const outCaseDir = path.resolve(ctx.directory, "out", args.caso);
+      const outCaseDir = getOutDir(ctx, args.caso);
       ensureDir(outCaseDir);
 
       const simPath = path.join(outCaseDir, "ENVIO-SIMULADO.md");
